@@ -340,8 +340,8 @@ class ALSModel private[ml] (
    *         stored as an array of (itemCol: Int, rating: Float) Rows.
    */
   @Since("2.2.0")
-  def recommendForAllUsers(numItems: Int): DataFrame = {
-    recommendForAll(userFactors, itemFactors, $(userCol), $(itemCol), numItems)
+  def recommendForAllUsers(numItems: Int, blockSize:Int = 4096): DataFrame = {
+    recommendForAll(userFactors, itemFactors, $(userCol), $(itemCol), numItems, blockSize)
   }
 
   /**
@@ -351,8 +351,8 @@ class ALSModel private[ml] (
    *         stored as an array of (userCol: Int, rating: Float) Rows.
    */
   @Since("2.2.0")
-  def recommendForAllItems(numUsers: Int): DataFrame = {
-    recommendForAll(itemFactors, userFactors, $(itemCol), $(userCol), numUsers)
+  def recommendForAllItems(numUsers: Int, blockSize:Int = 4096): DataFrame = {
+    recommendForAll(itemFactors, userFactors, $(itemCol), $(userCol), numUsers, blockSize)
   }
 
   /**
@@ -383,11 +383,12 @@ class ALSModel private[ml] (
       dstFactors: DataFrame,
       srcOutputColumn: String,
       dstOutputColumn: String,
-      num: Int): DataFrame = {
+      num: Int,
+      blockSize: Int = 4096): DataFrame = {
     import srcFactors.sparkSession.implicits._
 
-    val srcFactorsBlocked = blockify(srcFactors.as[(Int, Array[Float])])
-    val dstFactorsBlocked = blockify(dstFactors.as[(Int, Array[Float])])
+    val srcFactorsBlocked = blockify(srcFactors.as[(Int, Array[Float])], blockSize)
+    val dstFactorsBlocked = blockify(dstFactors.as[(Int, Array[Float])], blockSize)
     val ratings = srcFactorsBlocked.crossJoin(dstFactorsBlocked)
       .as[(Seq[(Int, Array[Float])], Seq[(Int, Array[Float])])]
       .flatMap { case (srcIter, dstIter) =>

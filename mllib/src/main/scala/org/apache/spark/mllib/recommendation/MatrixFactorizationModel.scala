@@ -214,8 +214,8 @@ class MatrixFactorizationModel @Since("0.8.0") (
    * rating field. Semantics of score is same as recommendProducts API
    */
   @Since("1.4.0")
-  def recommendProductsForUsers(num: Int): RDD[(Int, Array[Rating])] = {
-    MatrixFactorizationModel.recommendForAll(rank, userFeatures, productFeatures, num).map {
+  def recommendProductsForUsers(num: Int, blockSize:Int = 4096): RDD[(Int, Array[Rating])] = {
+    MatrixFactorizationModel.recommendForAll(rank, userFeatures, productFeatures, num, blockSize).map {
       case (user, top) =>
         val ratings = top.map { case (product, rating) => Rating(user, product, rating) }
         (user, ratings)
@@ -232,8 +232,8 @@ class MatrixFactorizationModel @Since("0.8.0") (
    * rating field. Semantics of score is same as recommendUsers API
    */
   @Since("1.4.0")
-  def recommendUsersForProducts(num: Int): RDD[(Int, Array[Rating])] = {
-    MatrixFactorizationModel.recommendForAll(rank, productFeatures, userFeatures, num).map {
+  def recommendUsersForProducts(num: Int, blockSize:Int = 4096): RDD[(Int, Array[Rating])] = {
+    MatrixFactorizationModel.recommendForAll(rank, productFeatures, userFeatures, num, blockSize).map {
       case (product, top) =>
         val ratings = top.map { case (user, rating) => Rating(user, product, rating) }
         (product, ratings)
@@ -285,9 +285,10 @@ object MatrixFactorizationModel extends Loader[MatrixFactorizationModel] {
       rank: Int,
       srcFeatures: RDD[(Int, Array[Double])],
       dstFeatures: RDD[(Int, Array[Double])],
-      num: Int): RDD[(Int, Array[(Int, Double)])] = {
-    val srcBlocks = blockify(srcFeatures)
-    val dstBlocks = blockify(dstFeatures)
+      num: Int,
+      blockSize: Int = 4096): RDD[(Int, Array[(Int, Double)])] = {
+    val srcBlocks = blockify(srcFeatures, blockSize)
+    val dstBlocks = blockify(dstFeatures, blockSize)
     val ratings = srcBlocks.cartesian(dstBlocks).flatMap { case (srcIter, dstIter) =>
       val m = srcIter.size
       val n = math.min(dstIter.size, num)
