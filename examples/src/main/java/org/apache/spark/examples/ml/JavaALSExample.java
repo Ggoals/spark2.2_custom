@@ -115,9 +115,9 @@ public class JavaALSExample {
     System.out.println("Root-mean-square error = " + rmse);
 
     // Generate top 10 movie recommendations for each user
-    Dataset<Row> userRecs = model.recommendForAllUsers(10);
+    Dataset<Row> userRecs = model.recommendForAllUsers(10, 4096);
     // Generate top 10 user recommendations for each movie
-    Dataset<Row> movieRecs = model.recommendForAllItems(10);
+    Dataset<Row> movieRecs = model.recommendForAllItems(10, 4096);
     // $example off$
     userRecs.show();
     movieRecs.show();

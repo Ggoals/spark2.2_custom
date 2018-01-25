@@ -49,7 +49,7 @@ public class JavaRankingMetricsExample {
     MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(ratings), 10, 10, 0.01);
 
     // Get top 10 recommendations for every user and scale ratings from 0 to 1
-    JavaRDD<Tuple2<Object, Rating[]>> userRecs = model.recommendProductsForUsers(10).toJavaRDD();
+    JavaRDD<Tuple2<Object, Rating[]>> userRecs = model.recommendProductsForUsers(10, 4096).toJavaRDD();
     JavaRDD<Tuple2<Object, Rating[]>> userRecsScaled = userRecs.map(t -> {
         Rating[] scaledRatings = new Rating[t._2().length];
         for (int i = 0; i < scaledRatings.length; i++) {

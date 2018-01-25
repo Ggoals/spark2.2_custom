@@ -82,11 +82,11 @@ class ALS(JavaEstimator, HasCheckpointInterval, HasMaxIter, HasPredictionCol, Ha
     Row(user=1, item=0, prediction=2.6258413791656494)
     >>> predictions[2]
     Row(user=2, item=0, prediction=-1.5018409490585327)
-    >>> user_recs = model.recommendForAllUsers(3)
+    >>> user_recs = model.recommendForAllUsers(3, 4096)
     >>> user_recs.where(user_recs.user == 0)\
         .select("recommendations.item", "recommendations.rating").collect()
     [Row(item=[0, 1, 2], rating=[3.910..., 1.992..., -0.138...])]
-    >>> item_recs = model.recommendForAllItems(3)
+    >>> item_recs = model.recommendForAllItems(3, , 4096)
     >>> item_recs.where(item_recs.item == 2)\
         .select("recommendations.user", "recommendations.rating").collect()
     [Row(user=[2, 1, 0], rating=[4.901..., 3.981..., -0.138...])]
@@ -393,7 +393,7 @@ class ALSModel(JavaModel, JavaMLWritable, JavaMLReadable):
         return self._call_java("itemFactors")
 
     @since("2.2.0")
-    def recommendForAllUsers(self, numItems):
+    def recommendForAllUsers(self, numItems, blockSize=4096):
         """
         Returns top `numItems` items recommended for each user, for all users.
 
@@ -401,10 +401,10 @@ class ALSModel(JavaModel, JavaMLWritable, JavaMLReadable):
         :return: a DataFrame of (userCol, recommendations), where recommendations are
                  stored as an array of (itemCol, rating) Rows.
         """
-        return self._call_java("recommendForAllUsers", numItems)
+        return self._call_java("recommendForAllUsers", numItems, blockSize)
 
     @since("2.2.0")
-    def recommendForAllItems(self, numUsers):
+    def recommendForAllItems(self, numUsers, blockSize=4096):
         """
         Returns top `numUsers` users recommended for each item, for all items.
 
@@ -412,7 +412,7 @@ class ALSModel(JavaModel, JavaMLWritable, JavaMLReadable):
         :return: a DataFrame of (itemCol, recommendations), where recommendations are
                  stored as an array of (userCol, rating) Rows.
         """
-        return self._call_java("recommendForAllItems", numUsers)
+        return self._call_java("recommendForAllItems", numUsers, blockSize)
 
 
 if __name__ == "__main__":
